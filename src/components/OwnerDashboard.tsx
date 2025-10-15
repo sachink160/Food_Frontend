@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Store, Plus, Edit2, Trash2, Save, X, Clock, MapPin, DollarSign, Star } from 'lucide-react';
 import { api } from '../services/api';
+import { getPublicUrl } from '../services/api';
 import type { Restaurant, Category, MenuItem, RestaurantFormData, CategoryFormData, MenuItemFormData } from '../types';
-import { CUISINE_TYPES, STORE_SIZES, VALIDATION_PATTERNS, SUCCESS_MESSAGES, ERROR_MESSAGES } from '../config/constants';
+import { CUISINE_TYPES, STORE_SIZES, VALIDATION_PATTERNS, SUCCESS_MESSAGES, ERROR_MESSAGES, CATEGORY_SUGGESTIONS } from '../config/constants';
 
 export function OwnerDashboard() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -40,6 +41,7 @@ export function OwnerDashboard() {
     description: '',
     image_url: '',
   });
+  const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
   const [menuItemForm, setMenuItemForm] = useState<MenuItemFormData>({
     name: '',
     description: '',
@@ -54,6 +56,7 @@ export function OwnerDashboard() {
     restaurant_id: 0,
     category_id: 0,
   });
+  const [menuItemImageFile, setMenuItemImageFile] = useState<File | null>(null);
 
   // Specials management
   const [specialItems, setSpecialItems] = useState<MenuItem[]>([]);
@@ -158,8 +161,18 @@ export function OwnerDashboard() {
       }
       
       const newCategory = await api.createCategory(categoryForm);
-      setCategories([...categories, newCategory]);
+      if (categoryImageFile) {
+        try {
+          const updated = await api.uploadCategoryImage(newCategory.id, categoryImageFile);
+          setCategories([...categories, updated]);
+        } catch (_) {
+          setCategories([...categories, newCategory]);
+        }
+      } else {
+        setCategories([...categories, newCategory]);
+      }
       setCategoryForm({ name: '', description: '', image_url: '' });
+      setCategoryImageFile(null);
       setShowCategoryForm(false);
       setSuccess(SUCCESS_MESSAGES.CATEGORY_CREATED);
     } catch (error) {
@@ -189,7 +202,16 @@ export function OwnerDashboard() {
         ...menuItemForm,
         restaurant_id: restaurant?.id || 0,
       });
-      setMenuItems([...menuItems, newMenuItem]);
+      if (menuItemImageFile) {
+        try {
+          const updated = await api.uploadMenuItemImage(newMenuItem.id, menuItemImageFile);
+          setMenuItems([...menuItems, updated]);
+        } catch (_) {
+          setMenuItems([...menuItems, newMenuItem]);
+        }
+      } else {
+        setMenuItems([...menuItems, newMenuItem]);
+      }
       setMenuItemForm({
         name: '',
         description: '',
@@ -204,6 +226,7 @@ export function OwnerDashboard() {
         restaurant_id: restaurant?.id || 0,
         category_id: 0,
       });
+      setMenuItemImageFile(null);
       setShowMenuItemForm(false);
       setSuccess(SUCCESS_MESSAGES.MENU_ITEM_CREATED);
     } catch (error) {
@@ -763,6 +786,21 @@ export function OwnerDashboard() {
                       placeholder="e.g., Appetizers, Main Course"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     />
+                    {CATEGORY_SUGGESTIONS.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {CATEGORY_SUGGESTIONS.slice(0, 12).map((name) => (
+                          <button
+                            key={name}
+                            type="button"
+                            onClick={() => setCategoryForm({ ...categoryForm, name })}
+                            className="px-2 py-1 text-xs bg-gray-100 hover:bg-orange-100 text-gray-700 rounded"
+                            title="Use this suggestion"
+                          >
+                            {name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -774,6 +812,17 @@ export function OwnerDashboard() {
                       onChange={(e) => setCategoryForm({ ...categoryForm, image_url: e.target.value })}
                       placeholder="https://example.com/image.jpg"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Upload Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={(e) => setCategoryImageFile(e.target.files?.[0] || null)}
+                      className="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
                     />
                   </div>
                 </div>
@@ -825,7 +874,7 @@ export function OwnerDashboard() {
                     <div className="flex items-center gap-3">
                       {category.image_url && (
                         <img 
-                          src={category.image_url} 
+                          src={getPublicUrl(category.image_url)} 
                           alt={category.name}
                           className="w-12 h-12 object-cover rounded-lg"
                           onError={(e) => {
@@ -944,6 +993,17 @@ export function OwnerDashboard() {
                       onChange={(e) => setMenuItemForm({ ...menuItemForm, image_url: e.target.value })}
                       placeholder="https://example.com/image.jpg"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Upload Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={(e) => setMenuItemImageFile(e.target.files?.[0] || null)}
+                      className="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
                     />
                   </div>
                   <div>
@@ -1089,7 +1149,7 @@ export function OwnerDashboard() {
                     
                     {item.image_url && (
                       <img 
-                        src={item.image_url} 
+                        src={getPublicUrl(item.image_url)} 
                         alt={item.name}
                         className="w-full h-32 object-cover rounded-lg mb-2"
                         onError={(e) => {
@@ -1212,7 +1272,7 @@ export function OwnerDashboard() {
                         
                         {item.image_url && (
                           <img 
-                            src={item.image_url} 
+                            src={getPublicUrl(item.image_url)} 
                             alt={item.name}
                             className="w-full h-24 object-cover rounded-lg mt-2"
                             onError={(e) => {

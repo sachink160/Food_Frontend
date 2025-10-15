@@ -67,3 +67,32 @@ export const STORE_SIZES = [
   { value: 'medium', label: 'Medium (11-30 seats)' },
   { value: 'large', label: 'Large (31+ seats)' }
 ];
+
+// Suggested food categories
+export const CATEGORY_SUGGESTIONS: string[] = [
+  'Biryani',
+  'Pizza',
+  'Burgers',
+  'Sandwiches',
+  'South Indian',
+  'North Indian',
+  'Chinese',
+  'Momos & Dim Sum',
+  'Indian Curries',
+  'Tandoor & Kebabs',
+  'BBQ & Grill',
+  'Seafood',
+  'Breakfast',
+  'Salads',
+  'Soups',
+  'Pasta & Noodles',
+  'Street Food',
+  'Bakery',
+  'Desserts',
+  'Ice Cream',
+  'Beverages',
+  'Coffee & Tea',
+  'Juice & Smoothies',
+  'Vegan',
+  'Vegetarian',
+];

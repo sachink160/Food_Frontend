@@ -179,6 +179,19 @@ class ApiService {
     return this.handleResponse<Category>(response);
   }
 
+  async uploadCategoryImage(categoryId: number, file: File): Promise<Category> {
+    const form = new FormData();
+    form.append('image', file);
+    const response = await fetch(`${API_BASE_URL}/owner/restaurant/categories/${categoryId}/upload-image`, {
+      method: 'POST',
+      headers: {
+        ...this.getAuthHeader(),
+      },
+      body: form,
+    });
+    return this.handleResponse<Category>(response);
+  }
+
   async updateCategory(id: number, data: Partial<Category>): Promise<Category> {
     const response = await fetch(`${API_BASE_URL}/owner/restaurant/categories/${id}`, {
       method: 'PATCH',
@@ -228,6 +241,19 @@ class ApiService {
         ...this.getAuthHeader(),
       },
       body: JSON.stringify(data),
+    });
+    return this.handleResponse<MenuItem>(response);
+  }
+
+  async uploadMenuItemImage(itemId: number, file: File): Promise<MenuItem> {
+    const form = new FormData();
+    form.append('image', file);
+    const response = await fetch(`${API_BASE_URL}/owner/restaurant/menu/${itemId}/upload-image`, {
+      method: 'POST',
+      headers: {
+        ...this.getAuthHeader(),
+      },
+      body: form,
     });
     return this.handleResponse<MenuItem>(response);
   }
